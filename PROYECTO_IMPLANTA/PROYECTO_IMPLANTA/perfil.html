@@ -1,0 +1,111 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Perfil - GAIN MASS</title>
+    <link rel="icon" href="img/LG.png" type="image/png">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="styles.css">
+</head>
+
+<body>
+
+    <header class="header">
+        <div class="logo">GAIN MASS</div>
+        <nav class="nav-derecha">
+            <a href="home.html">Inicio</a>
+            <a href="#">Progreso</a>
+            <a href="#">Rutinas</a>
+            <a href="comida.html">Alimentación</a>
+            <a href="perfil.html" style="color: var(--naranja-gain);"><i class="fa-solid fa-user"></i></a>
+        </nav>
+    </header>
+
+    <main class="perfil-container">
+
+        <aside class="perfil-usuario">
+            <div class="foto-perfil">
+                <img src="img/perfil.png" alt="Foto perfil" onerror="this.src='https://ui-avatars.com/api/?name=Jessica+Montesinos&background=ff7a00&color=fff'">
+            </div>
+            <h2 id="nombrePerfil">Jessica Montesinos</h2>
+            <p id="edadPerfil">Ingeniería en Sistemas • UNITEC</p>
+            
+            <div style="margin-top: 20px;">
+                <button class="btn-accion-comida" style="padding: 10px; font-size: 0.8rem;" onclick="location.href='comida.html'">
+                    Actualizar Peso
+                </button>
+            </div>
+        </aside>
+
+        <div class="perfil-info-grid">
+
+            <section class="perfil-box objetivos">
+                <h3><i class="fa-solid fa-trophy" style="color: gold; margin-right: 10px;"></i> Objetivos Logrados</h3>
+                <p style="color: #aaa; font-size: 0.9rem;">Has mantenido tu superávit calórico por 5 días seguidos. ¡Sigue así!</p>
+                <div class="barra-externa" style="margin-top: 15px; height: 10px;">
+                    <div class="barra-relleno" style="width: 70%; background: var(--naranja-gain);"></div>
+                </div>
+                <small style="display: block; margin-top: 5px; color: #666;">70% de la meta mensual</small>
+            </section>
+
+            <section class="perfil-box calendario">
+                <h3><i class="fa-regular fa-calendar-check" style="color: var(--azul-cian); margin-right: 10px;"></i> Días Trabajados</h3>
+                
+                <div class="calendario-header">
+                    <button id="mesAnterior"><i class="fa-solid fa-chevron-left"></i></button>
+                    <span id="mesActual" style="font-weight: bold; text-transform: uppercase; letter-spacing: 1px;">Abril 2026</span>
+                    <button id="mesSiguiente"><i class="fa-solid fa-chevron-right"></i></button>
+                </div>
+
+                <div id="diasCalendario">
+                    <div class="dia-cal">1</div>
+                    <div class="dia-cal dia-entrenado">2</div>
+                    <div class="dia-cal dia-entrenado">3</div>
+                    <div class="dia-cal">4</div>
+                    <div class="dia-cal dia-entrenado">5</div>
+                    </div>
+
+                <p class="nota" style="margin-top: 15px; font-size: 0.75rem; color: #555; text-align: center;">
+                    <span style="color: var(--naranja-gain)">●</span> Entrenado | <span>●</span> Descanso
+                </p>
+            </section>
+
+            <section class="perfil-box extra" style="grid-column: span 2;">
+                <h3><i class="fa-solid fa-chart-line" style="color: var(--azul-cian); margin-right: 10px;"></i> Resumen de Progreso</h3>
+                
+                <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 15px; margin-top: 10px;">
+                    <div class="macro-card">
+                        <strong>12</strong>
+                        <small>Días Entrenados</small>
+                    </div>
+                    <div class="macro-card">
+                        <strong>18h</strong>
+                        <small>Tiempo Total</small>
+                    </div>
+                    <div class="macro-card">
+                        <strong>4.5k</strong>
+                        <small>Calorías Quemadas</small>
+                    </div>
+                </div>
+
+                <ul style="margin-top: 20px;">
+                    <li>Mejor sesión: Lunes de Pierna (1.5h)</li>
+                    <li>Consistencia del mes: 85%</li>
+                    <li>Próximo hito: 15 días activos</li>
+                </ul>
+            </section>
+
+        </div>
+    </main>
+
+    <footer>
+        © 2026 GAIN MASS • 
+    </footer>
+
+    <script src="auth.js"></script>
+    <script src="script.js"></script>
+
+</body>
+</html>

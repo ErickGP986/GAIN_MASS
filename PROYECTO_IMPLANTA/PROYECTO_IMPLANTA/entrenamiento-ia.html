@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>IA Training - GAIN MASS</title>
+    <link rel="icon" href="img/LG.png" type="image/png">
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body class="ia-body" data-auth-required="true">
+    <header class="header-ia-clean">
+        <a href="ejercicios.html" class="volver-btn-minimal">✕ Salir del entrenamiento</a>
+    </header>
+
+    <main class="ia-workspace">
+        <section class="camera-section">
+            <div class="camera-wrapper">
+                <div class="ia-overlay">
+                    <div class="scan-line"></div>
+                    <div class="corner top-left"></div>
+                    <div class="corner top-right"></div>
+                    <div class="corner bottom-left"></div>
+                    <div class="corner bottom-right"></div>
+                    
+                    <div class="ia-status">
+                        <span class="dot pulse"></span>
+                        <span class="status-text">IA: ANALIZANDO POSTURA...</span>
+                    </div>
+                </div>
+                
+                <video id="webcam" autoplay playsinline></video>
+                <canvas id="canvas-overlay"></canvas>
+            </div>
+            
+            <div class="camera-controls">
+                <button class="btn-ia-action" onclick="iniciarCamara()">ENCENDER CÁMARA</button>
+                <button class="btn-ia-action secondary">PAUSAR</button>
+            </div>
+        </section>
+
+        <aside class="feedback-panel">
+            <div class="feedback-header">
+                <h3>Corrección en Tiempo Real</h3>
+                <span class="accuracy-badge">98% Precisión</span>
+            </div>
+            
+            <div class="feedback-content">
+                <div class="stat-box">
+                    <span class="label">REPETICIONES</span>
+                    <span class="value" id="contador-reps">0 <small>/ 12</small></span>
+                </div>
+
+                <div class="instruction-card alert">
+                    <h4>⚠️ ALERTA DE POSTURA</h4>
+                    <p id="feedback-ia">Baja un poco más la cadera para completar el rango de movimiento.</p>
+                </div>
+
+                <div class="next-exercise">
+                    <p>Siguiente: <strong>Sentadilla Búlgara</strong></p>
+                </div>
+            </div>
+        </aside>
+    </main>
+
+    <script src="auth.js"></script>
+    <script src="entrenamiento-ia.js"></script>
+</body>
+</html>

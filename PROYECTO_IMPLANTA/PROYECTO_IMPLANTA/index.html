@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>GAIN MASS — Acceso</title>
+    <link rel="icon" href="img/LG.png" type="image/png">
+    <link rel="stylesheet" href="styles.css">
+    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@500;600;700&display=swap" rel="stylesheet">
+</head>
+<body class="registro-body">
+    <div class="registro-container auth-container">
+        <div class="logo" style="text-align:center; margin-bottom: 8px; font-size: 1.4rem; letter-spacing: 0.05em;">GAIN MASS</div>
+        <h1 style="margin-top: 0;">Acceso a tu cuenta</h1>
+        <p style="text-align: center; color: #aaa; font-size: 0.9rem; margin-bottom: 1.25rem;">Inicia sesión o regístrate para continuar.</p>
+
+        <div class="auth-tabs">
+            <button id="tabRegistro" class="auth-tab activo" type="button">Registrarse</button>
+            <button id="tabLogin" class="auth-tab" type="button">Iniciar sesión</button>
+        </div>
+
+        <form id="formRegistroAuth" class="auth-form">
+            <input type="text" id="regNombre" placeholder="Nombre de usuario" required>
+            <input type="email" id="regCorreo" placeholder="Correo electrónico principal" required>
+            <input type="password" id="regContrasena" placeholder="Contraseña (mínimo 6)" required>
+            <input type="text" id="regTelefono" placeholder="Número de celular (opcional)">
+            <input type="email" id="regCorreoRespaldo" placeholder="Correo de respaldo (opcional)">
+            <button type="submit">Crear cuenta</button>
+        </form>
+
+        <form id="formLoginAuth" class="auth-form oculto">
+            <input type="email" id="logCorreo" placeholder="Correo principal" required>
+            <input type="password" id="logContrasena" placeholder="Contraseña" required>
+            <button type="submit">Iniciar sesión</button>
+            <button type="button" id="btnOlvideContrasena" class="auth-link-btn">Olvidé mi contraseña</button>
+        </form>
+
+        <form id="formRecuperacionAuth" class="auth-form oculto">
+            <input type="email" id="recCorreo" placeholder="Correo principal de tu cuenta" required>
+            <select id="recMetodo" required>
+                <option value="">Metodo para recuperar</option>
+                <option value="telefono">SMS al celular</option>
+                <option value="correo_respaldo">Código al correo de respaldo</option>
+            </select>
+            <button type="submit">Enviar código de recuperación</button>
+
+            <div id="bloqueRecuperacion" class="oculto">
+                <input type="text" id="recCodigo" placeholder="Código de 6 dígitos" maxlength="6">
+                <input type="password" id="recNuevaContrasena" placeholder="Nueva contraseña">
+                <button type="button" id="btnCambiarContrasena">Cambiar contraseña</button>
+            </div>
+            <button type="button" id="btnVolverLogin" class="auth-link-btn">Volver a iniciar sesión</button>
+        </form>
+
+        <div id="resultadoAuth" class="resultado-registro oculto" aria-live="polite"></div>
+        <p style="margin-top:12px; font-size:.85rem; color:#9a9a9a;">
+            ¿Quieres abrir la app en tu telefono despues?
+            <a href="qr.html" style="color:#8ecbff;">Ir a seccion QR</a>
+        </p>
+    </div>
+
+    <footer style="text-align:center; padding: 24px; color:#666; font-size:0.85rem;">© 2026 GAIN MASS</footer>
+
+    <script src="auth-page.js"></script>
+</body>
+</html>

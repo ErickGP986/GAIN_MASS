@@ -1,0 +1,144 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Planes Premium - GAIN MASS</title>
+    <link rel="icon" href="img/LG.png" type="image/png">
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body data-auth-required="true">
+    
+    <header class="header">
+        <div class="logo-container">
+            <div class="logo">GAIN MASS</div>
+        </div>
+        <div class="nav-derecha">
+            <nav>
+                <a href="sobre-nosotros.html">Sobre Nosotros</a>
+                <a href="ejercicios.html">Rutinas</a>
+                <a href="registro-comida.html">Alimentación</a>
+            </nav>
+            <div class="perfil-menu">
+                <div class="perfil-icono" id="perfilIcono">👤</div>
+            </div>
+        </div>
+    </header>
+
+    <div class="premium-page">
+        <div class="contenedor-regresar">
+            <a href="home.html" class="btn-regresar-tech">← Regresar</a>
+        </div>
+
+        <main class="dashboard">
+            
+            <div id="seccionVenta">
+                <div class="premium-intro">
+                    <h2>Lleva tu físico al siguiente nivel</h2>
+                    <p>Desbloquea el poder de la Inteligencia Artificial en tus entrenamientos.</p>
+                </div>
+
+                <div class="premium-venta-layout">
+                    <article class="col-video">
+                        <div class="video-overlay">
+                            <span class="video-text">[ VIDEO DE PRESENTACIÓN ]</span>
+                        </div>
+                    </article>
+
+                    <div id="cardOferta" style="flex: 1;">
+                        <article class="card col-plan plan-destacado">
+                            <h3>PLAN MASS</h3>
+                            <p class="precio-premium">$250 <span>/mes</span></p>
+                            <button class="btn-principal" type="button" onclick="abrirModalPago()">Activar Ahora</button>
+                            
+                            <div class="divider-line" style="margin: 25px 0; border-top: 1px solid #222; width: 100%;"></div>
+                            
+                            <ul class="premium-lista-detalle">
+                                <li>✔ Cámara e IA en vivo</li>
+                                <li>✔ Escáner de Alimentos</li>
+                                <li>✔ Contador de Macros exactos</li>
+                                <li>✔ Rutinas Personalizadas</li>
+                            </ul>
+                        </article>
+                    </div>
+                </div>
+            </div>
+
+            <div id="seccionActiva" style="display: none;">
+                <div class="premium-intro">
+                    <h2>¡Acceso Concedido, USUARIO</h2>
+                    <p>Selecciona una herramienta inteligente para potenciar tu progreso.</p>
+                </div>
+                
+                <div class="dashboard-premium-grid">
+                    <div class="card-acceso-premium">
+                        <div class="icon-placeholder">📸</div>
+                        <h3>Cámara de Corrección</h3>
+                        <button type="button" class="btn-ir" onclick="location.href='entrenamiento-ia.html'">Comenzar</button>
+                    </div>
+                    <div class="card-acceso-premium">
+                        <div class="icon-placeholder">🎥</div>
+                        <h3>Video Guías</h3>
+                        <button type="button" class="btn-ir" onclick="location.href='ejercicios.html'">Ir</button>
+                    </div>
+                    <div class="card-acceso-premium">
+                        <div class="icon-placeholder">🍎</div>
+                        <h3>Cálculo de Macros</h3>
+                        <button type="button" class="btn-ir" onclick="location.href='registro-comida.html'">Probar</button>
+                    </div>
+                    <div class="card-acceso-premium">
+                        <div class="icon-placeholder">📊</div>
+                        <h3>Seguimiento Personal</h3>
+                        <button type="button" class="btn-ir" onclick="location.href='objetivos.html'">Ver</button>
+                    </div>
+                </div>
+
+                <div class="tarjeta-status-tech">
+                    <div class="status-izq">
+                        <h3 class="titulo-activo-dibujo">PLAN MASS <br>ACTIVO</h3>
+                    </div>
+                    
+                    <div class="status-der">
+                        <p class="txt-beneficios">Disfruta tus beneficios Premium</p>
+                        <p class="txt-cargo">Próximo cargo: <strong>02 Mayo 2026</strong></p>
+                        <button class="btn-cancelar-dibujo" onclick="location.reload()">Cancelar Suscripción</button>
+                    </div>
+                </div>
+            </div>
+
+        </main> </div> <div id="modalPago" class="modal">
+        <div class="modal-content">
+            <span class="close-btn" onclick="cerrarModalPago()">&times;</span>
+            <h3>Finalizar Suscripción</h3>
+            <p>Introduce tus datos para activar el Plan Mass.</p>
+            
+            <form id="formPagoPremium" onsubmit="event.preventDefault(); simularPago();">
+                <div class="form-group-pago">
+                    <label>Nombre en la tarjeta</label>
+                    <input type="text" placeholder="Ej. Jose Torres" required>
+                </div>
+                <div class="form-group-pago">
+                    <label>Número de Tarjeta</label>
+                    <input type="text" placeholder="0000 0000 0000 0000" maxlength="16" required>
+                </div>
+                
+                <div style="display: flex; gap: 15px; margin-bottom: 20px;">
+                    <div class="form-group-pago" style="flex: 1;">
+                        <label>Expira (MM/AA)</label>
+                        <input type="text" placeholder="MM/AA" maxlength="5" required>
+                    </div>
+                    <div class="form-group-pago" style="flex: 1;">
+                        <label>CVV</label>
+                        <input type="password" placeholder="123" maxlength="3" required>
+                    </div>
+                </div>
+                
+                <button class="btn-confirmar-pago" type="submit">CONFIRMAR Y PAGAR $250</button>
+            </form>
+        </div>
+    </div>
+
+    <script src="auth.js"></script>
+    <script src="premium.js"></script>
+</body>
+</html>
