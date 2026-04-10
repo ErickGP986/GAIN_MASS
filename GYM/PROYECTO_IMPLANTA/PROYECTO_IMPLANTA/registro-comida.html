@@ -1,0 +1,132 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>GAIN MASS - Nutrición</title>
+    <link rel="icon" href="img/LG.png" type="image/png">
+    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="styles.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/dist/css/all.min.css">
+</head>
+<body class="food-body">
+
+    <header class="header">
+        <div class="logo">GAIN MASS</div>
+        <nav class="nav-derecha">
+            <a href="home.html">Inicio</a>
+            <a href="ejercicios.html">Entrenamiento</a>
+            <a href="comida.html" style="color: var(--naranja-gain);">Alimentación</a>
+            <a href="perfil.html"><i class="fa-solid fa-user-circle"></i> Perfil</a>
+        </nav>
+    </header>
+
+    <main class="food-container">
+        <div class="consejo-dia">
+            <strong>💡 Smart Tip:</strong> <span id="texto-tip">Cargando consejo...</span>
+        </div>
+
+        <section class="food-form">
+            <h2><i class="fa-solid fa-calculator"></i> Configurar Meta Diaria</h2>
+            <div class="form-comida">
+                <div class="grid-inputs">
+                    <input type="number" id="peso" placeholder="Peso (kg)" class="input-mass">
+                    <input type="number" id="altura" placeholder="Altura (cm)" class="input-mass">
+                    <input type="number" id="edad" placeholder="Edad" class="input-mass">
+                    <select id="nivelActividad" class="input-mass">
+                        <option value="1.2">Sedentario</option>
+                        <option value="1.375">Ligero (1-3 días)</option>
+                        <option value="1.55">Moderado (3-5 días)</option>
+                        <option value="1.725">Fuerte (6-7 días)</option>
+                    </select>
+                </div>
+                <button onclick="generarPlanNutricional()" class="btn-accion-comida">Calcular Superávit</button>
+            </div>
+            <div id="resultado-biometrico" style="margin-top: 15px; font-size: 0.9rem; color: #aaa;">Introduce tus datos...</div>
+        </section>
+
+        <section class="calorias-box">
+            <div class="header-progreso">
+                <span>Calorías de Hoy</span>
+                <strong><span id="calConsumidas">0</span> / <span id="calMeta">2500</span> kcal</strong>
+            </div>
+            <div class="barra-externa">
+                <div id="barra-interna" class="barra-relleno"></div>
+            </div>
+            <div class="macros-display">
+                <div class="macro-card"><span>Proteína</span><strong id="mProte">0g</strong></div>
+                <div class="macro-card"><span>Carbos</span><strong id="mCarbo">0g</strong></div>
+                <div class="macro-card"><span>Grasas</span><strong id="mGrasa">0g</strong></div>
+            </div>
+        </section>
+
+        <section class="food-form">
+            <h2><i class="fa-solid fa-plus"></i> Registrar Alimento</h2>
+            <div class="form-comida">
+                <select id="alimento" class="input-mass">
+                    <option value="pollo">Pechuga de Pollo (100g)</option>
+                    <option value="arroz">Arroz Blanco (100g)</option>
+                    <option value="huevo">Huevo (Unidad)</option>
+                    <option value="atun">Atún (100g)</option>
+                    <option value="avena">Avena (100g)</option>
+                </select>
+                <input type="number" id="cantidad" placeholder="Cantidad (Gramos o Unidades)" class="input-mass">
+                <button onclick="agregarComida()" class="btn-accion-comida">Añadir al Diario</button>
+            </div>
+        </section>
+
+        <section class="food-form">
+            <h2><i class="fa-solid fa-camera"></i> Escáner IA (Premium)</h2>
+            <div class="camara-placeholder" id="contenedor-camara">
+                <p>Detecta macros automáticamente</p>
+                <button class="btn-accion-comida" onclick="abrirCamara()">Activar Cámara</button>
+            </div>
+        </section>
+
+        <section class="food-form">
+            <div class="header-recetas">
+                <h2><i class="fa-solid fa-lightbulb"></i> Recomendaciones</h2>
+                <div class="slider-controls">
+                    <button class="btn-scroll" onclick="scrollRecetas(-1)"><i class="fa-solid fa-chevron-left"></i></button>
+                    <button class="btn-scroll" onclick="scrollRecetas(1)"><i class="fa-solid fa-chevron-right"></i></button>
+                </div>
+            </div>
+            <div class="filtros-container">
+                <button class="btn-filtro active" onclick="filtrarRecetas('todas')">Todas</button>
+                <button class="btn-filtro" onclick="filtrarRecetas('masa')">Ganar Masa</button>
+                <button class="btn-filtro" onclick="filtrarRecetas('energia')">Energía</button>
+                <button class="btn-filtro" onclick="filtrarRecetas('snack')">Snacks</button>
+            </div>
+            <div id="wrapper-recetas" class="recetas-slider"></div>
+        </section>
+
+        <section class="lista-comidas">
+            <h2><i class="fa-solid fa-list"></i> Comidas de hoy</h2>
+            <table class="tabla-mass">
+                <thead>
+                    <tr>
+                        <th>Alimento</th>
+                        <th>Kcal</th>
+                        <th>Macros</th>
+                        <th>Eliminar</th>
+                    </tr>
+                </thead>
+                <tbody id="listaComidas"></tbody>
+            </table>
+        </section>
+
+        <section class="food-form">
+            <h2><i class="fa-solid fa-droplet"></i> Hidratación</h2>
+            <div style="text-align: center;">
+                <p>Vasos: <strong id="conteo-agua">0</strong> / 10</p>
+                <div class="barra-externa" style="height: 10px;">
+                    <div id="barra-agua" class="barra-relleno" style="background: #00d2ff;"></div>
+                </div>
+                <button onclick="agregarAgua()" class="btn-accion-comida" style="margin-top: 10px;">+ Tomar Agua</button>
+            </div>
+        </section>
+    </main>
+
+    <script src="calorias.js"></script>
+</body>
+</html>

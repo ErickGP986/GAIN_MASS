@@ -1,10 +1,8 @@
-/** URL publica de produccion (Render). El QR apunta aqui para que funcione desde cualquier red. */
-const PUBLIC_APP_URL = "https://gain-mass.onrender.com/";
-
 document.addEventListener("DOMContentLoaded", () => {
   const containers = document.querySelectorAll("[data-qr-share]");
   if (!containers.length) return;
 
+  const current = window.location.href;
   const isLocal = /localhost|127\.0\.0\.1/i.test(window.location.hostname);
 
   containers.forEach((box) => {
@@ -16,7 +14,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
     if (!input || !img || !link || !tip || !btn) return;
 
-    input.value = PUBLIC_APP_URL;
+    input.value = current;
 
     function render(url) {
       const clean = (url || "").trim();
@@ -31,14 +29,14 @@ document.addEventListener("DOMContentLoaded", () => {
     }
 
     btn.addEventListener("click", () => render(input.value));
-    render(PUBLIC_APP_URL);
+    render(current);
 
     if (isLocal) {
       tip.textContent =
-        "El QR usa la app publica en Render. Cualquier dispositivo puede escanearlo. Si pruebas en local, puedes cambiar la URL del cuadro y pulsar Generar QR.";
+        "Estas usando localhost. Para abrir desde tu celular, pon la IP de tu PC (ej: http://192.168.1.20:5500/) y pulsa Generar QR.";
     } else {
       tip.textContent =
-        "Escanea el QR para abrir GAIN MASS desde cualquier red o dispositivo.";
+        "Si tu celular y tu PC estan en la misma red, este QR deberia abrir la app.";
     }
   });
 });
