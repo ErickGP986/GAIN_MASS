@@ -15,8 +15,6 @@
     <main class="ia-workspace">
         <section class="camera-section">
             <div class="camera-wrapper">
-                <video id="webcam" autoplay playsinline muted></video>
-                <canvas id="canvas-overlay" aria-hidden="true"></canvas>
                 <div class="ia-overlay">
                     <div class="scan-line"></div>
                     <div class="corner top-left"></div>
@@ -26,22 +24,24 @@
                     
                     <div class="ia-status">
                         <span class="dot pulse"></span>
-                        <span class="status-text">IA: DETECTANDO PUNTOS...</span>
+                        <span class="status-text">IA: ANALIZANDO POSTURA...</span>
                     </div>
                 </div>
+                
+                <video id="webcam" autoplay playsinline></video>
+                <canvas id="canvas-overlay"></canvas>
             </div>
             
             <div class="camera-controls">
-                <button type="button" class="btn-ia-action" id="btnCamara">ENCENDER CÁMARA</button>
-                <button type="button" class="btn-ia-action secondary" id="btnFlipCam">CAMBIAR CÁMARA</button>
-                <button type="button" class="btn-ia-action secondary" id="btnPausa">PAUSAR</button>
+                <button class="btn-ia-action" onclick="iniciarCamara()">ENCENDER CÁMARA</button>
+                <button class="btn-ia-action secondary">PAUSAR</button>
             </div>
         </section>
 
         <aside class="feedback-panel">
             <div class="feedback-header">
                 <h3>Corrección en Tiempo Real</h3>
-                <span class="accuracy-badge">MoveNet</span>
+                <span class="accuracy-badge">98% Precisión</span>
             </div>
             
             <div class="feedback-content">
@@ -52,7 +52,7 @@
 
                 <div class="instruction-card alert">
                     <h4>⚠️ ALERTA DE POSTURA</h4>
-                    <p id="feedback-ia">Enciende la cámara para ver puntos corporales y sugerencias.</p>
+                    <p id="feedback-ia">Baja un poco más la cadera para completar el rango de movimiento.</p>
                 </div>
 
                 <div class="next-exercise">
@@ -63,6 +63,6 @@
     </main>
 
     <script src="auth.js"></script>
-    <script type="module" src="entrenamiento-ia.js"></script>
+    <script src="entrenamiento-ia.js"></script>
 </body>
 </html>
