@@ -1,17 +1,4 @@
-document.addEventListener("DOMContentLoaded", async () => {
-    const totalUsuarios = document.getElementById("totalUsuarios");
-    const cuerpoTabla = document.getElementById("cuerpoTabla");
-
-    try {
-        const resp = await fetch("/api/users");
-        if (!resp.ok) {
-            window.location.href = "index.html";
-            return;
-        }
-
-        const usuarios = await resp.json();
-        if (!Array.isArray(usuarios)) return;
-
+function renderTablaUsuarios(usuarios, totalUsuarios, cuerpoTabla) {
         if (totalUsuarios) totalUsuarios.textContent = String(usuarios.length);
 
         if (!cuerpoTabla) return;
@@ -37,7 +24,29 @@ document.addEventListener("DOMContentLoaded", async () => {
 
             cuerpoTabla.appendChild(tr);
         });
+}
+
+document.addEventListener("DOMContentLoaded", async () => {
+    const totalUsuarios = document.getElementById("totalUsuarios");
+    const cuerpoTabla = document.getElementById("cuerpoTabla");
+
+    try {
+        const resp = await fetch("/api/users");
+        if (GainMassLocal.responseIsJson(resp) && resp.ok) {
+            const usuarios = await resp.json();
+            if (!Array.isArray(usuarios)) return;
+            renderTablaUsuarios(usuarios, totalUsuarios, cuerpoTabla);
+            return;
+        }
     } catch (error) {
         console.error(error);
     }
+
+    if (!GainMassLocal.hasLocalSession()) {
+        window.location.href = "index.html";
+        return;
+    }
+
+    const usuarios = GainMassLocal.listUsersForAdmin();
+    renderTablaUsuarios(usuarios, totalUsuarios, cuerpoTabla);
 });

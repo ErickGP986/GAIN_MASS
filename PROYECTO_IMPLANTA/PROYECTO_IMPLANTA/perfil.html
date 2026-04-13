@@ -10,15 +10,15 @@
     <link rel="stylesheet" href="styles.css">
 </head>
 
-<body>
+<body data-auth-required="true">
 
     <header class="header">
         <div class="logo">GAIN MASS</div>
         <nav class="nav-derecha">
             <a href="home.html">Inicio</a>
-            <a href="#">Progreso</a>
+            <a href="objetivos.html">Progreso</a>
             <a href="#">Rutinas</a>
-            <a href="comida.html">Alimentación</a>
+            <a href="registro-comida.html">Alimentación</a>
             <a href="perfil.html" style="color: var(--naranja-gain);"><i class="fa-solid fa-user"></i></a>
         </nav>
     </header>
@@ -26,15 +26,33 @@
     <main class="perfil-container">
 
         <aside class="perfil-usuario">
-            <div class="foto-perfil">
-                <img src="img/perfil.png" alt="Foto perfil" onerror="this.src='https://ui-avatars.com/api/?name=Jessica+Montesinos&background=ff7a00&color=fff'">
+            <div class="perfil-bloque perfil-bloque-hero">
+                <div class="foto-perfil">
+                    <img id="imgPerfil" src="img/perfil.png" alt="Foto perfil">
+                </div>
+                <div class="perfil-foto-acciones">
+                    <input type="file" id="inputFotoPerfil" class="input-foto-oculto" accept="image/jpeg,image/png,image/webp,image/gif" aria-label="Elegir foto de perfil">
+                    <button type="button" class="btn-cambiar-foto" id="btnElegirFoto">
+                        <i class="fa-solid fa-camera"></i> Cambiar foto
+                    </button>
+                    <button type="button" class="btn-quitar-foto oculto" id="btnQuitarFoto">Quitar foto</button>
+                </div>
             </div>
-            <h2 id="nombrePerfil">Jessica Montesinos</h2>
-            <p id="edadPerfil">Ingeniería en Sistemas • UNITEC</p>
-            
-            <div style="margin-top: 20px;">
-                <button class="btn-accion-comida" style="padding: 10px; font-size: 0.8rem;" onclick="location.href='comida.html'">
-                    Actualizar Peso
+
+            <div class="perfil-bloque perfil-bloque-nombre">
+                <h2 id="nombrePerfil">Usuario</h2>
+                <p id="correoPerfil" class="perfil-correo"></p>
+            </div>
+
+            <div class="perfil-bloque perfil-bloque-datos">
+                <h3 class="perfil-datos-titulo"><i class="fa-solid fa-clipboard-list"></i> Datos corporales</h3>
+                <ul id="datosBioPerfil" class="perfil-datos-bio"></ul>
+                <p id="perfilSinDatos" class="perfil-sin-datos oculto">Completa el <a href="imc.html">formulario de IMC</a> o la meta en <a href="registro-comida.html">alimentación</a> para ver tu edad, estatura y más.</p>
+            </div>
+
+            <div class="perfil-bloque perfil-bloque-accion">
+                <button type="button" class="btn-perfil-peso" onclick="location.href='registro-comida.html'">
+                    <i class="fa-solid fa-scale-balanced"></i> Actualizar peso / meta
                 </button>
             </div>
         </aside>
@@ -42,12 +60,35 @@
         <div class="perfil-info-grid">
 
             <section class="perfil-box objetivos">
-                <h3><i class="fa-solid fa-trophy" style="color: gold; margin-right: 10px;"></i> Objetivos Logrados</h3>
-                <p style="color: #aaa; font-size: 0.9rem;">Has mantenido tu superávit calórico por 5 días seguidos. ¡Sigue así!</p>
-                <div class="barra-externa" style="margin-top: 15px; height: 10px;">
-                    <div class="barra-relleno" style="width: 70%; background: var(--naranja-gain);"></div>
+                <h3><i class="fa-solid fa-trophy" style="color: gold; margin-right: 10px;"></i> Objetivos diarios (hábitos)</h3>
+                <p id="perfilHabitosIntro" class="perfil-habitos-intro"></p>
+                <div class="perfil-habitos-metrics">
+                    <div class="perfil-hab-metric">
+                        <span id="perfilHabPct" class="perfil-hab-metric-val">0%</span>
+                        <span class="perfil-hab-metric-label">Progreso hoy</span>
+                    </div>
+                    <div class="perfil-hab-metric">
+                        <span id="perfilHabRacha" class="perfil-hab-metric-val">0</span>
+                        <span class="perfil-hab-metric-label">Racha</span>
+                    </div>
+                    <div class="perfil-hab-metric">
+                        <span id="perfilHabClave" class="perfil-hab-metric-val">0/0</span>
+                        <span class="perfil-hab-metric-label">Hábitos clave</span>
+                    </div>
                 </div>
-                <small style="display: block; margin-top: 5px; color: #666;">70% de la meta mensual</small>
+                <div class="barra-externa perfil-barra-habitos">
+                    <div id="barraPerfilHabitos" class="barra-relleno" style="width: 0%"></div>
+                </div>
+                <div id="perfilPrioridadesWrap" class="perfil-prioridades-wrap oculto">
+                    <p class="perfil-prioridades-label"><i class="fa-solid fa-star" style="color:#ffd700;"></i> Prioridades marcadas (★)</p>
+                    <div class="barra-externa barra-externa--secundaria perfil-barra-habitos">
+                        <div id="barraPerfilPrioridades" class="barra-relleno barra-relleno--prioridades" style="width: 0%"></div>
+                    </div>
+                    <p class="perfil-prioridades-pct"><span id="perfilPctPrioridades">0</span>% del foco de hoy</p>
+                </div>
+                <div id="perfilChipsPrioridades" class="perfil-habitos-chips" aria-label="Lista de hábitos prioridad"></div>
+                <p id="perfilHabitosVacio" class="perfil-habitos-vacio oculto">Aún no marcas prioridades (★). Hazlo en el tablero para verlas aquí.</p>
+                <a href="objetivos.html" class="perfil-link-tablero">Abrir tablero de disciplina <i class="fa-solid fa-arrow-right"></i></a>
             </section>
 
             <section class="perfil-box calendario">
@@ -67,34 +108,31 @@
                     <div class="dia-cal dia-entrenado">5</div>
                     </div>
 
-                <p class="nota" style="margin-top: 15px; font-size: 0.75rem; color: #555; text-align: center;">
+                <p class="nota perfil-cal-nota">
                     <span style="color: var(--naranja-gain)">●</span> Entrenado | <span>●</span> Descanso
                 </p>
             </section>
 
-            <section class="perfil-box extra" style="grid-column: span 2;">
-                <h3><i class="fa-solid fa-chart-line" style="color: var(--azul-cian); margin-right: 10px;"></i> Resumen de Progreso</h3>
-                
-                <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 15px; margin-top: 10px;">
-                    <div class="macro-card">
-                        <strong>12</strong>
-                        <small>Días Entrenados</small>
-                    </div>
-                    <div class="macro-card">
-                        <strong>18h</strong>
-                        <small>Tiempo Total</small>
-                    </div>
-                    <div class="macro-card">
-                        <strong>4.5k</strong>
-                        <small>Calorías Quemadas</small>
-                    </div>
-                </div>
+            <section class="perfil-box perfil-box-resumen">
+                <h3 class="perfil-datos-titulo"><i class="fa-solid fa-chart-line"></i> Resumen de progreso</h3>
+                <p class="perfil-resumen-nota">Basado en el calendario de <strong>Días trabajados</strong>, tu peso del perfil y una duración estimada por sesión.</p>
 
-                <ul style="margin-top: 20px;">
-                    <li>Mejor sesión: Lunes de Pierna (1.5h)</li>
-                    <li>Consistencia del mes: 85%</li>
-                    <li>Próximo hito: 15 días activos</li>
+                <ul class="perfil-datos-bio perfil-resumen-kpis" aria-label="Indicadores principales">
+                    <li>
+                        <span class="perfil-meta-label">Días entrenados (total)</span>
+                        <span class="perfil-meta-valor" id="resumenDiasEntrenados">0</span>
+                    </li>
+                    <li>
+                        <span class="perfil-meta-label">Tiempo estimado</span>
+                        <span class="perfil-meta-valor" id="resumenTiempoTotal">0 min</span>
+                    </li>
+                    <li>
+                        <span class="perfil-meta-label">kcal gastadas (estim.)</span>
+                        <span class="perfil-meta-valor" id="resumenKcalQuemadas" title="MET ~5.5, entreno con pesas">0</span>
+                    </li>
                 </ul>
+
+                <ul id="resumenInsights" class="perfil-datos-bio perfil-resumen-detalles" aria-label="Detalle del resumen"></ul>
             </section>
 
         </div>
@@ -104,7 +142,9 @@
         © 2026 GAIN MASS • 
     </footer>
 
+    <script src="local-api.js"></script>
     <script src="auth.js"></script>
+    <script src="habitos.js"></script>
     <script src="script.js"></script>
 
 </body>

@@ -9,14 +9,14 @@
     <link rel="stylesheet" href="styles.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/dist/css/all.min.css">
 </head>
-<body class="food-body">
+<body class="food-body" data-auth-required="true">
 
     <header class="header">
         <div class="logo">GAIN MASS</div>
         <nav class="nav-derecha">
             <a href="home.html">Inicio</a>
             <a href="ejercicios.html">Entrenamiento</a>
-            <a href="comida.html" style="color: var(--naranja-gain);">Alimentación</a>
+            <a href="registro-comida.html" style="color: var(--naranja-gain);">Alimentación</a>
             <a href="perfil.html"><i class="fa-solid fa-user-circle"></i> Perfil</a>
         </nav>
     </header>
@@ -30,9 +30,9 @@
             <h2><i class="fa-solid fa-calculator"></i> Configurar Meta Diaria</h2>
             <div class="form-comida">
                 <div class="grid-inputs">
-                    <input type="number" id="peso" placeholder="Peso (kg)" class="input-mass">
-                    <input type="number" id="altura" placeholder="Altura (cm)" class="input-mass">
-                    <input type="number" id="edad" placeholder="Edad" class="input-mass">
+                    <input type="number" id="peso" placeholder="Peso (kg)" class="input-mass" min="1" step="any">
+                    <input type="number" id="altura" placeholder="Altura (m o cm, ej. 1.75 o 175)" class="input-mass" min="0.5" step="any">
+                    <input type="number" id="edad" placeholder="Edad" class="input-mass" min="10" max="120">
                     <select id="nivelActividad" class="input-mass">
                         <option value="1.2">Sedentario</option>
                         <option value="1.375">Ligero (1-3 días)</option>
@@ -40,14 +40,14 @@
                         <option value="1.725">Fuerte (6-7 días)</option>
                     </select>
                 </div>
-                <button onclick="generarPlanNutricional()" class="btn-accion-comida">Calcular Superávit</button>
+                <button type="button" onclick="generarPlanNutricional()" class="btn-accion-comida">Calcular Superávit</button>
             </div>
-            <div id="resultado-biometrico" style="margin-top: 15px; font-size: 0.9rem; color: #aaa;">Introduce tus datos...</div>
+            <div id="resultado-biometrico" style="margin-top: 15px; font-size: 0.9rem; color: #aaa;">Introduce tus datos para estimar calorías y macros orientativos.</div>
         </section>
 
         <section class="calorias-box">
             <div class="header-progreso">
-                <span>Calorías de Hoy</span>
+                <span>Calorías de hoy</span>
                 <strong><span id="calConsumidas">0</span> / <span id="calMeta">2500</span> kcal</strong>
             </div>
             <div class="barra-externa">
@@ -58,28 +58,117 @@
                 <div class="macro-card"><span>Carbos</span><strong id="mCarbo">0g</strong></div>
                 <div class="macro-card"><span>Grasas</span><strong id="mGrasa">0g</strong></div>
             </div>
+            <p class="macro-leyenda">Los valores con “/” aparecen tras usar “Calcular superávit” (objetivos orientativos).</p>
         </section>
 
         <section class="food-form">
-            <h2><i class="fa-solid fa-plus"></i> Registrar Alimento</h2>
+            <h2><i class="fa-solid fa-plus"></i> Registrar alimento (catálogo)</h2>
             <div class="form-comida">
-                <select id="alimento" class="input-mass">
-                    <option value="pollo">Pechuga de Pollo (100g)</option>
-                    <option value="arroz">Arroz Blanco (100g)</option>
-                    <option value="huevo">Huevo (Unidad)</option>
-                    <option value="atun">Atún (100g)</option>
-                    <option value="avena">Avena (100g)</option>
+                <select id="momentoComida" class="input-mass" aria-label="Momento del día">
+                    <option value="">Momento (opcional)</option>
+                    <option value="Desayuno">Desayuno</option>
+                    <option value="Snack AM">Snack AM</option>
+                    <option value="Comida">Comida</option>
+                    <option value="Snack PM">Snack PM</option>
+                    <option value="Cena">Cena</option>
                 </select>
-                <input type="number" id="cantidad" placeholder="Cantidad (Gramos o Unidades)" class="input-mass">
-                <button onclick="agregarComida()" class="btn-accion-comida">Añadir al Diario</button>
+                <select id="alimento" class="input-mass">
+                    <optgroup label="Proteínas">
+                        <option value="pollo">Pechuga de Pollo (por 100 g)</option>
+                        <option value="pavo">Pechuga de Pavo (por 100 g)</option>
+                        <option value="carne_res">Carne de Res magra (por 100 g)</option>
+                        <option value="salmon">Salmón (por 100 g)</option>
+                        <option value="cerdo_magro">Lomo de Cerdo magro (por 100 g)</option>
+                        <option value="atun">Atún en agua (por 100 g)</option>
+                        <option value="huevo">Huevo entero (por unidad)</option>
+                        <option value="claras">Clara de huevo (por unidad)</option>
+                        <option value="merluza">Merluza / Pescado blanco (por 100 g)</option>
+                        <option value="jamon_pavo">Jamón de pavo / fiambre (por 100 g)</option>
+                        <option value="tofu">Tofu firme (por 100 g)</option>
+                        <option value="whey">Proteína en polvo (por scoop ~30 g)</option>
+                    </optgroup>
+                    <optgroup label="Carbohidratos">
+                        <option value="arroz">Arroz blanco cocido (por 100 g)</option>
+                        <option value="arroz_integral">Arroz integral cocido (por 100 g)</option>
+                        <option value="pasta">Pasta cocida (por 100 g)</option>
+                        <option value="avena">Avena en hojuelas (por 100 g)</option>
+                        <option value="avena_instantanea">Avena instantánea (por 100 g)</option>
+                        <option value="quinoa">Quinoa cocida (por 100 g)</option>
+                        <option value="papa">Papa / Patata cocida (por 100 g)</option>
+                        <option value="batata">Batata / Camote asada (por 100 g)</option>
+                        <option value="platano">Plátano (por 100 g)</option>
+                        <option value="maiz">Maíz en granos (por 100 g)</option>
+                        <option value="frijoles">Frijoles cocidos (por 100 g)</option>
+                        <option value="lentejas">Lentejas cocidas (por 100 g)</option>
+                        <option value="rebanada_pan">Rebanada pan integral (por unidad)</option>
+                        <option value="tortilla_maiz">Tortilla de maíz (por unidad)</option>
+                    </optgroup>
+                    <optgroup label="Verduras y fruta">
+                        <option value="brocoli">Brócoli cocido (por 100 g)</option>
+                        <option value="espinaca">Espinaca cocida (por 100 g)</option>
+                        <option value="tomate">Tomate (por 100 g)</option>
+                        <option value="zanahoria">Zanahoria (por 100 g)</option>
+                        <option value="manzana">Manzana (por 100 g)</option>
+                        <option value="naranja">Naranja (por 100 g)</option>
+                        <option value="uva">Uva (por 100 g)</option>
+                        <option value="pepino">Pepino (por 100 g)</option>
+                        <option value="lechuga">Lechuga (por 100 g)</option>
+                    </optgroup>
+                    <optgroup label="Lácteos">
+                        <option value="leche">Leche entera (por 100 g / ml)</option>
+                        <option value="leche_desnatada">Leche desnatada (por 100 g / ml)</option>
+                        <option value="yogur_griego">Yogur griego natural (por 100 g)</option>
+                        <option value="queso_rallado">Queso rallado (por 100 g)</option>
+                        <option value="requeson">Requesón / Cottage (por 100 g)</option>
+                        <option value="queso_panela">Queso panela / fresco (por 100 g)</option>
+                    </optgroup>
+                    <optgroup label="Grasas y frutos secos">
+                        <option value="aguacate">Aguacate (por 100 g)</option>
+                        <option value="almendras">Almendras (por 100 g)</option>
+                        <option value="crema_cacahuate">Crema de cacahuate (por 100 g)</option>
+                        <option value="aceite_oliva">Aceite de oliva (por 100 g)</option>
+                        <option value="mantequilla">Mantequilla (por 100 g)</option>
+                        <option value="nueces">Nueces (por 100 g)</option>
+                        <option value="chocolate_negro">Chocolate negro ~70% (por 100 g)</option>
+                    </optgroup>
+                    <optgroup label="Otros">
+                        <option value="hummus">Hummus (por 100 g)</option>
+                    </optgroup>
+                </select>
+                <input type="number" id="cantidad" placeholder="Gramos o unidades" class="input-mass" min="0" step="any">
+                <button type="button" onclick="agregarComida()" class="btn-accion-comida">Añadir al diario</button>
+            </div>
+        </section>
+
+        <section class="food-form">
+            <h2><i class="fa-solid fa-pen"></i> Entrada manual</h2>
+            <p class="food-form-hint">Si tu alimento no está en el catálogo, regístralo con nombre y macros.</p>
+            <div class="form-comida">
+                <input type="text" id="manualNombre" placeholder="Nombre del alimento" class="input-mass">
+                <div class="grid-inputs">
+                    <input type="number" id="manualCal" placeholder="Kcal" class="input-mass" min="0" step="any">
+                    <input type="number" id="manualP" placeholder="Proteína (g)" class="input-mass" min="0" step="any">
+                    <input type="number" id="manualC" placeholder="Carbos (g)" class="input-mass" min="0" step="any">
+                    <input type="number" id="manualG" placeholder="Grasas (g)" class="input-mass" min="0" step="any">
+                </div>
+                <select id="momentoManual" class="input-mass" aria-label="Momento del día">
+                    <option value="">Momento (opcional)</option>
+                    <option value="Desayuno">Desayuno</option>
+                    <option value="Snack AM">Snack AM</option>
+                    <option value="Comida">Comida</option>
+                    <option value="Snack PM">Snack PM</option>
+                    <option value="Cena">Cena</option>
+                </select>
+                <button type="button" onclick="agregarComidaManual()" class="btn-accion-comida">Añadir manual al diario</button>
             </div>
         </section>
 
         <section class="food-form">
             <h2><i class="fa-solid fa-camera"></i> Escáner IA (Premium)</h2>
+            <p class="food-form-hint">Apunta al plato con buena luz. MobileNet clasifica la imagen (ImageNet); es orientativo: confirma gramos en el catálogo o manual.</p>
             <div class="camara-placeholder" id="contenedor-camara">
-                <p>Detecta macros automáticamente</p>
-                <button class="btn-accion-comida" onclick="abrirCamara()">Activar Cámara</button>
+                <p>Análisis en el navegador (descarga del modelo la primera vez).</p>
+                <button type="button" class="btn-accion-comida" onclick="abrirCamara()">Activar cámara y detección</button>
             </div>
         </section>
 
@@ -87,28 +176,31 @@
             <div class="header-recetas">
                 <h2><i class="fa-solid fa-lightbulb"></i> Recomendaciones</h2>
                 <div class="slider-controls">
-                    <button class="btn-scroll" onclick="scrollRecetas(-1)"><i class="fa-solid fa-chevron-left"></i></button>
-                    <button class="btn-scroll" onclick="scrollRecetas(1)"><i class="fa-solid fa-chevron-right"></i></button>
+                    <button type="button" class="btn-scroll" onclick="scrollRecetas(-1)"><i class="fa-solid fa-chevron-left"></i></button>
+                    <button type="button" class="btn-scroll" onclick="scrollRecetas(1)"><i class="fa-solid fa-chevron-right"></i></button>
                 </div>
             </div>
             <div class="filtros-container">
-                <button class="btn-filtro active" onclick="filtrarRecetas('todas')">Todas</button>
-                <button class="btn-filtro" onclick="filtrarRecetas('masa')">Ganar Masa</button>
-                <button class="btn-filtro" onclick="filtrarRecetas('energia')">Energía</button>
-                <button class="btn-filtro" onclick="filtrarRecetas('snack')">Snacks</button>
+                <button type="button" class="btn-filtro active" data-cat="todas">Todas</button>
+                <button type="button" class="btn-filtro" data-cat="masa">Ganar Masa</button>
+                <button type="button" class="btn-filtro" data-cat="energia">Energía</button>
+                <button type="button" class="btn-filtro" data-cat="snack">Snacks</button>
             </div>
+            <p class="recetas-macro-leyenda"><strong>P</strong> = proteínas · <strong>C</strong> = carbohidratos · <strong>G</strong> = grasas (valores aproximados por receta).</p>
             <div id="wrapper-recetas" class="recetas-slider"></div>
         </section>
 
         <section class="lista-comidas">
             <h2><i class="fa-solid fa-list"></i> Comidas de hoy</h2>
+            <p class="food-dia-hoy" id="foodDiaLabel"></p>
             <table class="tabla-mass">
                 <thead>
                     <tr>
+                        <th>Momento</th>
                         <th>Alimento</th>
                         <th>Kcal</th>
                         <th>Macros</th>
-                        <th>Eliminar</th>
+                        <th></th>
                     </tr>
                 </thead>
                 <tbody id="listaComidas"></tbody>
@@ -117,16 +209,25 @@
 
         <section class="food-form">
             <h2><i class="fa-solid fa-droplet"></i> Hidratación</h2>
-            <div style="text-align: center;">
+            <div class="hidratacion-block">
                 <p>Vasos: <strong id="conteo-agua">0</strong> / 10</p>
-                <div class="barra-externa" style="height: 10px;">
-                    <div id="barra-agua" class="barra-relleno" style="background: #00d2ff;"></div>
+                <div class="barra-externa barra-agua-wrap">
+                    <div id="barra-agua" class="barra-relleno barra-agua-fill"></div>
                 </div>
-                <button onclick="agregarAgua()" class="btn-accion-comida" style="margin-top: 10px;">+ Tomar Agua</button>
+                <button type="button" onclick="agregarAgua()" class="btn-accion-comida btn-agua">+ Tomar agua</button>
             </div>
+            <p class="food-form-hint hidratacion-consejo">
+                <i class="fa-solid fa-droplet" aria-hidden="true"></i>
+                Beber agua a lo largo del día es fundamental: te mantiene con energía, ayuda a la digestión y a la recuperación muscular. ¡Cada vaso suma!
+            </p>
         </section>
     </main>
 
+    <script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs@4.11.0/dist/tf.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@tensorflow-models/mobilenet@2.1.1/dist/mobilenet.min.js"></script>
+    <script src="local-api.js"></script>
+    <script src="auth.js"></script>
+    <script src="script.js"></script>
     <script src="calorias.js"></script>
 </body>
 </html>

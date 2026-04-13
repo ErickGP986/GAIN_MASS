@@ -57,25 +57,36 @@ document.addEventListener("DOMContentLoaded", () => {
         const telefono = document.getElementById("regTelefono").value.trim();
         const correo_respaldo = document.getElementById("regCorreoRespaldo").value.trim();
 
+        const body = { nombre, correo, contrasena, telefono, correo_respaldo };
         try {
             const resp = await fetch("/api/register", {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({ nombre, correo, contrasena, telefono, correo_respaldo }),
+                body: JSON.stringify(body),
             });
-            const data = await resp.json();
-            if (!resp.ok) {
-                mostrarMensaje(data.error || "No se pudo registrar.", "error");
+            if (GainMassLocal.responseIsJson(resp)) {
+                const data = await resp.json();
+                if (!resp.ok) {
+                    mostrarMensaje(data.error || "No se pudo registrar.", "error");
+                    return;
+                }
+                GainMassLocal.clearLocalSessionFlag();
+                mostrarMensaje("Cuenta creada correctamente. Ahora inicia sesión.", "ok");
+                formRegistro.reset();
+                activarLogin();
                 return;
             }
-
-            mostrarMensaje("Cuenta creada correctamente. Ahora inicia sesión.", "ok");
-            formRegistro.reset();
-            activarLogin();
         } catch (err) {
             console.error(err);
-            mostrarMensaje("Error de conexión con el servidor.", "error");
         }
+        const loc = GainMassLocal.register(body);
+        if (!loc.ok) {
+            mostrarMensaje(loc.error || "No se pudo registrar.", "error");
+            return;
+        }
+        mostrarMensaje("Cuenta guardada en este equipo (sin servidor). Ahora inicia sesión.", "ok");
+        formRegistro.reset();
+        activarLogin();
     });
 
     formLogin.addEventListener("submit", async (e) => {
@@ -89,25 +100,34 @@ document.addEventListener("DOMContentLoaded", () => {
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify({ correo, contrasena }),
             });
-            const data = await resp.json();
-            if (!resp.ok) {
-                mostrarMensaje(data.error || "No se pudo iniciar sesión.", "error");
+            if (GainMassLocal.responseIsJson(resp)) {
+                const data = await resp.json();
+                if (!resp.ok) {
+                    mostrarMensaje(data.error || "No se pudo iniciar sesión.", "error");
+                    return;
+                }
+                GainMassLocal.clearLocalSessionFlag();
+                const u = data.usuario || {};
+                GainMassLocal.applyUsuario(u);
+                mostrarMensaje("Sesión iniciada. Redirigiendo...", "ok");
+                setTimeout(() => {
+                    window.location.href = "imc.html";
+                }, 700);
                 return;
             }
-
-            const u = data.usuario || {};
-            localStorage.setItem("usuario", u.nombre || "");
-            localStorage.setItem("correo", u.correo || "");
-            localStorage.setItem("premium", u.premium ? "1" : "0");
-
-            mostrarMensaje("Sesión iniciada. Redirigiendo...", "ok");
-            setTimeout(() => {
-                window.location.href = "imc.html";
-            }, 700);
         } catch (err) {
             console.error(err);
-            mostrarMensaje("Error de conexión con el servidor.", "error");
         }
+        const loc = GainMassLocal.login(correo, contrasena);
+        if (!loc.ok) {
+            mostrarMensaje(loc.error || "No se pudo iniciar sesión.", "error");
+            return;
+        }
+        GainMassLocal.applyUsuario(loc.usuario);
+        mostrarMensaje("Sesión local (sin servidor). Redirigiendo...", "ok");
+        setTimeout(() => {
+            window.location.href = "imc.html";
+        }, 700);
     });
 
     formRecuperacion.addEventListener("submit", async (e) => {
@@ -121,21 +141,32 @@ document.addEventListener("DOMContentLoaded", () => {
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify({ correo, metodo }),
             });
-            const data = await resp.json();
-            if (!resp.ok) {
-                mostrarMensaje(data.error || "No se pudo iniciar recuperación.", "error");
+            if (GainMassLocal.responseIsJson(resp)) {
+                const data = await resp.json();
+                if (!resp.ok) {
+                    mostrarMensaje(data.error || "No se pudo iniciar recuperación.", "error");
+                    return;
+                }
+                bloqueRecuperacion.classList.remove("oculto");
+                mostrarMensaje(
+                    `Codigo enviado a ${data.destino}. Demo local, codigo: ${data.demo_code}`,
+                    "ok"
+                );
                 return;
             }
-
-            bloqueRecuperacion.classList.remove("oculto");
-            mostrarMensaje(
-                `Codigo enviado a ${data.destino}. Demo local, codigo: ${data.demo_code}`,
-                "ok"
-            );
         } catch (err) {
             console.error(err);
-            mostrarMensaje("Error de conexión con el servidor.", "error");
         }
+        const lr = GainMassLocal.recoveryStart(correo);
+        if (!lr.ok) {
+            mostrarMensaje(lr.error || "No se pudo iniciar recuperación.", "error");
+            return;
+        }
+        bloqueRecuperacion.classList.remove("oculto");
+        mostrarMensaje(
+            `Codigo (solo en este navegador): ${lr.demo_code}. Destino: ${lr.destino}`,
+            "ok"
+        );
     });
 
     btnCambiarContrasena.addEventListener("click", async () => {
@@ -147,18 +178,29 @@ document.addEventListener("DOMContentLoaded", () => {
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify({ codigo, nueva_contrasena }),
             });
-            const data = await resp.json();
-            if (!resp.ok) {
-                mostrarMensaje(data.error || "No se pudo cambiar la contraseña.", "error");
+            if (GainMassLocal.responseIsJson(resp)) {
+                const data = await resp.json();
+                if (!resp.ok) {
+                    mostrarMensaje(data.error || "No se pudo cambiar la contraseña.", "error");
+                    return;
+                }
+                mostrarMensaje("Contraseña actualizada. Ahora inicia sesión.", "ok");
+                formRecuperacion.reset();
+                bloqueRecuperacion.classList.add("oculto");
+                activarLogin();
                 return;
             }
-            mostrarMensaje("Contraseña actualizada. Ahora inicia sesión.", "ok");
-            formRecuperacion.reset();
-            bloqueRecuperacion.classList.add("oculto");
-            activarLogin();
         } catch (err) {
             console.error(err);
-            mostrarMensaje("Error de conexión con el servidor.", "error");
         }
+        const rr = GainMassLocal.recoveryReset(codigo, nueva_contrasena);
+        if (!rr.ok) {
+            mostrarMensaje(rr.error || "No se pudo cambiar la contraseña.", "error");
+            return;
+        }
+        mostrarMensaje("Contraseña actualizada (local). Ahora inicia sesión.", "ok");
+        formRecuperacion.reset();
+        bloqueRecuperacion.classList.add("oculto");
+        activarLogin();
     });
 });

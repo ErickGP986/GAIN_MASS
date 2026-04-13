@@ -14,7 +14,8 @@
             <nav>
                 <a href="sobre-nosotros.html">Sobre Nosotros</a>
                 <a href="ejercicios.html">Rutinas</a>
-                <a href="registro-comida.html">Alimentación</a> </nav>
+                <a href="registro-comida.html">Alimentación</a>
+            </nav>
 
             <div class="perfil-menu">
                 <div class="perfil-icono" id="perfilIcono" onclick="toggleMenu()">👤</div>
@@ -35,166 +36,39 @@
         </div>
 
         <div class="resumen-habitos">
-            <p>Progreso de hoy: <strong id="porcentaje-habitos">0%</strong></p>
+            <div class="resumen-habitos-fila">
+                <p>Progreso ponderado hoy: <strong id="porcentaje-habitos">0%</strong></p>
+                <p class="racha-habitos">Racha: <strong id="racha-dias">0</strong> días seguidos</p>
+            </div>
             <div class="barra-externa">
                 <div id="barra-habitos" class="barra-relleno"></div>
             </div>
+            <p class="meta-habitos-hoy" id="requeridos-texto">Hábitos clave: 0/0</p>
+
+            <p class="sub-progreso" id="fila-prioridades" hidden>
+                Prioridades (★): <strong id="porcentaje-prioridades">0%</strong>
+            </p>
+            <div class="barra-externa barra-externa--secundaria" id="barra-prioridades-wrap" hidden>
+                <div id="barra-prioridades" class="barra-relleno barra-relleno--prioridades"></div>
+            </div>
+
+            <div class="historia-habitos-wrap">
+                <span class="historia-habitos-titulo">Últimos 7 días</span>
+                <div class="historia-habitos" id="historia-habitos" aria-hidden="true"></div>
+            </div>
         </div>
 
-        <div class="habitos-grid">
-            <div class="card-habito nut">
-                <div class="habito-check"><input type="checkbox"></div>
-                <div class="habito-info">
-                    <h3>💧 Hidratación (3L)</h3>
-                    <p>Fundamental para el transporte de nutrientes.</p>
-                </div>
-            </div>
-            <div class="card-habito nut">
-                <div class="habito-check"><input type="checkbox"></div>
-                <div class="habito-info">
-                    <h3>🍗 Proteína Base</h3>
-                    <p>Consumir 1.5g - 2g de proteína por kilo.</p>
-                </div>
-            </div>
-            <div class="card-habito nut">
-                <div class="habito-check"><input type="checkbox"></div>
-                <div class="habito-info">
-                    <h3>🥗 Vegetales Verdes</h3>
-                    <p>Fibra para una mejor digestión.</p>
-                </div>
-            </div>
-            <div class="card-habito nut">
-                <div class="habito-check"><input type="checkbox"></div>
-                <div class="habito-info">
-                    <h3>🚫 Cero Alcohol</h3>
-                    <p>Evita frenar la síntesis de proteína.</p>
-                </div>
-            </div>
-            <div class="card-habito nut">
-                <div class="habito-check"><input type="checkbox"></div>
-                <div class="habito-info">
-                    <h3>🍳 Desayuno Real</h3>
-                    <p>Sin ultraprocesados al iniciar el día.</p>
-                </div>
-            </div>
+        <p class="habitos-ayuda-foco">Marca ★ en hasta 5 hábitos para ver una barra extra de prioridades.</p>
 
-            <div class="card-habito ent">
-                <div class="habito-check"><input type="checkbox"></div>
-                <div class="habito-info">
-                    <h3>🏋️ Rutina de Pesas</h3>
-                    <p>Completar el bloque programado.</p>
-                </div>
-            </div>
-            <div class="card-habito ent">
-                <div class="habito-check"><input type="checkbox"></div>
-                <div class="habito-info">
-                    <h3>🔥 Calentamiento Pro</h3>
-                    <p>Movilidad articular previa.</p>
-                </div>
-            </div>
-            <div class="card-habito ent">
-                <div class="habito-check"><input type="checkbox"></div>
-                <div class="habito-info">
-                    <h3>🚶 10,000 Pasos</h3>
-                    <p>Mantenerse activo fuera del gym.</p>
-                </div>
-            </div>
-            <div class="card-habito ent">
-                <div class="habito-check"><input type="checkbox"></div>
-                <div class="habito-info">
-                    <h3>📈 Sobrecarga</h3>
-                    <p>Intentar subir peso o repeticiones.</p>
-                </div>
-            </div>
-            <div class="card-habito ent">
-                <div class="habito-check"><input type="checkbox"></div>
-                <div class="habito-info">
-                    <h3>⏱️ Descansos</h3>
-                    <p>Respetar los 60-90 seg entre series.</p>
-                </div>
-            </div>
-
-            <div class="card-habito rec">
-                <div class="habito-check"><input type="checkbox"></div>
-                <div class="habito-info">
-                    <h3>😴 Sueño de Calidad</h3>
-                    <p>Mínimo 7 horas ininterrumpidas.</p>
-                </div>
-            </div>
-            <div class="card-habito rec">
-                <div class="habito-check"><input type="checkbox"></div>
-                <div class="habito-info">
-                    <h3>🧘 Estiramiento</h3>
-                    <p>Relajar los músculos al finalizar.</p>
-                </div>
-            </div>
-            <div class="card-habito rec">
-                <div class="habito-check"><input type="checkbox"></div>
-                <div class="habito-info">
-                    <h3>💊 Suplementos</h3>
-                    <p>Creatina o vitaminas diarias.</p>
-                </div>
-            </div>
-            <div class="card-habito rec">
-                <div class="habito-check"><input type="checkbox"></div>
-                <div class="habito-info">
-                    <h3>🚿 Ducha Relajante</h3>
-                    <p>Bajar niveles de cortisol post-entreno.</p>
-                </div>
-            </div>
-            <div class="card-habito rec">
-                <div class="habito-check"><input type="checkbox"></div>
-                <div class="habito-info">
-                    <h3>☀️ Sol (15 min)</h3>
-                    <p>Vitamina D y salud ósea.</p>
-                </div>
-            </div>
-
-            <div class="card-habito men">
-                <div class="habito-check"><input type="checkbox"></div>
-                <div class="habito-info">
-                    <h3>📵 Detox Digital</h3>
-                    <p>Sin celular 30 min antes de dormir.</p>
-                </div>
-            </div>
-            <div class="card-habito men">
-                <div class="habito-check"><input type="checkbox"></div>
-                <div class="habito-info">
-                    <h3>🧠 Visualización</h3>
-                    <p>Repasar metas antes de empezar.</p>
-                </div>
-            </div>
-            <div class="card-habito men">
-                <div class="habito-check"><input type="checkbox"></div>
-                <div class="habito-info">
-                    <h3>📖 Aprendizaje</h3>
-                    <p>Leer sobre técnica o nutrición.</p>
-                </div>
-            </div>
-            <div class="card-habito men">
-                <div class="habito-check"><input type="checkbox"></div>
-                <div class="habito-info">
-                    <h3>🥤 Cero Refrescos</h3>
-                    <p>Sustituir por agua o infusiones.</p>
-                </div>
-            </div>
-            <div class="card-habito men">
-                <div class="habito-check"><input type="checkbox"></div>
-                <div class="habito-info">
-                    <h3>📝 Diario</h3>
-                    <p>Anotar sensaciones del día.</p>
-                </div>
-            </div>
-            <div class="card-habito men">
-                <div class="habito-check"><input type="checkbox"></div>
-                <div class="habito-info">
-                    <h3>📅 Agenda Mañana</h3>
-                    <p>Planifica tus tareas para reducir estrés.</p>
-                </div>
-            </div>
-        </div>
+        <nav class="habitos-tabs" id="habitos-tabs" aria-label="Categorías de hábitos"></nav>
+        <div id="habitos-root" class="habitos-grid"></div>
     </section>
 
+    <div id="habitos-toast" class="habitos-toast" role="status" aria-live="polite"></div>
+
+    <script src="local-api.js"></script>
+    <script src="auth.js"></script>
+    <script src="script.js"></script>
     <script src="habitos.js"></script>
 </body>
 </html>

@@ -24,24 +24,33 @@ document.addEventListener("DOMContentLoaded", function () {
                 body: JSON.stringify({ correo, contrasena }),
             });
 
-            const data = await respuesta.json();
-
-            if (!respuesta.ok) {
-                mostrarResultado(data.error || "No se pudo iniciar sesión.", "error");
+            if (GainMassLocal.responseIsJson(respuesta)) {
+                const data = await respuesta.json();
+                if (!respuesta.ok) {
+                    mostrarResultado(data.error || "No se pudo iniciar sesión.", "error");
+                    return;
+                }
+                GainMassLocal.clearLocalSessionFlag();
+                GainMassLocal.applyUsuario(data.usuario);
+                mostrarResultado("Inicio de sesión correcto. Redirigiendo...", "ok");
+                setTimeout(() => {
+                    window.location.href = "imc.html";
+                }, 700);
                 return;
             }
-
-            localStorage.setItem("usuario", data.usuario.nombre);
-            localStorage.setItem("correo", data.usuario.correo);
-            localStorage.setItem("premium", data.usuario && data.usuario.premium ? "1" : "0");
-            mostrarResultado("Inicio de sesión correcto. Redirigiendo...", "ok");
-
-            setTimeout(() => {
-                window.location.href = "imc.html";
-            }, 700);
         } catch (error) {
             console.error(error);
-            mostrarResultado("No se pudo conectar con el servidor.", "error");
         }
+
+        const loc = GainMassLocal.login(correo, contrasena);
+        if (!loc.ok) {
+            mostrarResultado(loc.error || "No se pudo iniciar sesión.", "error");
+            return;
+        }
+        GainMassLocal.applyUsuario(loc.usuario);
+        mostrarResultado("Sesión local (sin servidor). Redirigiendo...", "ok");
+        setTimeout(() => {
+            window.location.href = "imc.html";
+        }, 700);
     });
 });

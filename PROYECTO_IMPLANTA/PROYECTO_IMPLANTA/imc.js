@@ -1,3 +1,12 @@
+function guardarPerfilBiometricoLs(reg) {
+    if (!reg) return;
+    localStorage.setItem("edad", String(reg.edad));
+    if (reg.sexo) localStorage.setItem("sexo", reg.sexo);
+    localStorage.setItem("altura_cm", String(reg.altura_cm));
+    localStorage.setItem("peso_kg", String(reg.peso_kg));
+    localStorage.setItem("imc_ultimo", String(reg.imc));
+}
+
 document.addEventListener("DOMContentLoaded", () => {
     const form = document.getElementById("formImc");
     const resultado = document.getElementById("resultadoImc");
@@ -10,17 +19,27 @@ document.addEventListener("DOMContentLoaded", () => {
         resultado.classList.add(ok ? "ok" : "error");
     }
 
+    function mostrarRegistroImc(r) {
+        if (!r) return;
+        bloqueUltimo.classList.remove("oculto");
+        textoUltimo.textContent = `${r.nombre}, ${r.edad} años — IMC ${r.imc} (peso ${r.peso_kg} kg, ${r.altura_cm} cm, ${r.sexo}). Registrado: ${r.creado_en || ""}`;
+    }
+
     async function cargarUltimo() {
+        let reg = null;
         try {
             const resp = await fetch("/api/imc/latest");
-            if (!resp.ok) return;
-            const data = await resp.json();
-            if (!data.registro) return;
-            const r = data.registro;
-            bloqueUltimo.classList.remove("oculto");
-            textoUltimo.textContent = `${r.nombre}, ${r.edad} años — IMC ${r.imc} (peso ${r.peso_kg} kg, ${r.altura_cm} cm, ${r.sexo}). Registrado: ${r.creado_en || ""}`;
+            if (GainMassLocal.responseIsJson(resp) && resp.ok) {
+                const data = await resp.json();
+                if (data.registro) reg = data.registro;
+            }
         } catch (e) {
             console.error(e);
+        }
+        if (!reg) reg = GainMassLocal.getImcRegistro();
+        if (reg) {
+            guardarPerfilBiometricoLs(reg);
+            mostrarRegistroImc(reg);
         }
     }
 
@@ -39,26 +58,56 @@ document.addEventListener("DOMContentLoaded", () => {
             return;
         }
 
+        const altura_m = altura_cm / 100.0;
+        const imc_calc = Math.round((peso_kg / (altura_m * altura_m)) * 10) / 10;
+
         try {
             const resp = await fetch("/api/imc", {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify({ nombre, edad, sexo, peso_kg, altura_cm }),
             });
-            const data = await resp.json();
-            if (!resp.ok) {
-                mensaje(data.error || "No se pudo guardar.", false);
+            if (GainMassLocal.responseIsJson(resp)) {
+                const data = await resp.json();
+                if (!resp.ok) {
+                    mensaje(data.error || "No se pudo guardar.", false);
+                    return;
+                }
+                mensaje(`IMC calculado: ${data.imc} — Guardado correctamente.`, true);
+                guardarPerfilBiometricoLs({
+                    edad,
+                    sexo,
+                    peso_kg,
+                    altura_cm,
+                    imc: data.imc != null ? data.imc : imc_calc,
+                });
+                form.reset();
+                await cargarUltimo();
+                setTimeout(() => {
+                    window.location.href = "home.html";
+                }, 1200);
                 return;
             }
-            mensaje(`IMC calculado: ${data.imc} — Guardado correctamente.`, true);
-            form.reset();
-            await cargarUltimo();
-            setTimeout(() => {
-                window.location.href = "home.html";
-            }, 1200);
         } catch (err) {
             console.error(err);
-            mensaje("Error de conexión con el servidor.", false);
         }
+
+        const reg = {
+            nombre,
+            edad,
+            sexo,
+            peso_kg,
+            altura_cm,
+            imc: imc_calc,
+            creado_en: new Date().toLocaleString("es-MX"),
+        };
+        GainMassLocal.saveImc(reg);
+        guardarPerfilBiometricoLs(reg);
+        mensaje(`IMC calculado: ${imc_calc} — Guardado en este equipo (sin servidor).`, true);
+        form.reset();
+        await cargarUltimo();
+        setTimeout(() => {
+            window.location.href = "home.html";
+        }, 1200);
     });
 });
