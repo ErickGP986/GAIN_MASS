@@ -2,14 +2,16 @@
 <html lang="es">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+    <meta name="theme-color" content="#ff7a00">
     <title>IA Training - GAIN MASS</title>
     <link rel="icon" href="img/LG.png" type="image/png">
+    <link rel="manifest" href="manifest.json">
     <link rel="stylesheet" href="styles.css">
 </head>
 <body class="ia-body" data-auth-required="true">
     <header class="header-ia-clean">
-        <a href="ejercicios.html" class="volver-btn-minimal">✕ Salir del entrenamiento</a>
+        <a href="ejercicios.html" class="volver-btn-minimal" aria-label="Salir del entrenamiento y volver a rutinas">✕ Salir del entrenamiento</a>
     </header>
 
     <main class="ia-workspace">
@@ -34,14 +36,19 @@
 
             <div class="camera-controls">
                 <label class="ejercicio-ia-label" for="ejercicio-ia">Ejercicio a corregir</label>
-                <select id="ejercicio-ia" class="select-ejercicio-ia">
+                <select id="ejercicio-ia" class="select-ejercicio-ia" aria-label="Ejercicio a corregir con la IA">
                     <option value="general">General (solo esqueleto)</option>
                     <option value="plancha">Plancha / puente</option>
                     <option value="sentadilla">Sentadilla</option>
                 </select>
+                <label class="ejercicio-ia-label" for="select-cam-ia">Cámara</label>
+                <select id="select-cam-ia" class="select-ejercicio-ia select-cam-dispositivo" disabled aria-label="Elegir cámara de video">
+                    <option value="">Enciende la cámara para listar dispositivos</option>
+                </select>
                 <div class="camera-controls-btns">
-                    <button type="button" id="btn-cam-encender" class="btn-ia-action" onclick="iniciarCamara()">Encender cámara</button>
-                    <button type="button" id="btn-cam-detener" class="btn-ia-action btn-ia-stop" onclick="detenerCamara()" disabled>Detener cámara</button>
+                    <button type="button" id="btn-cam-encender" class="btn-ia-action" onclick="iniciarCamara()" aria-label="Encender cámara y comenzar detección">Encender cámara</button>
+                    <button type="button" id="btn-cam-cambiar" class="btn-ia-action btn-cam-sec" onclick="cambiarCamaraEntrenamiento()" disabled aria-label="Cambiar a la siguiente cámara">Cambiar cámara</button>
+                    <button type="button" id="btn-cam-detener" class="btn-ia-action btn-ia-stop" onclick="detenerCamara()" disabled aria-label="Detener cámara y análisis">Detener cámara</button>
                 </div>
                 <p class="camera-hint">La primera vez se descarga el modelo MoveNet (requiere internet). Detener apaga la webcam por completo.</p>
             </div>
@@ -51,12 +58,13 @@
             <div class="feedback-header">
                 <h3>Corrección en tiempo real</h3>
                 <span class="accuracy-badge">MoveNet · reglas locales</span>
+                <span class="quality-badge quality-badge--warn" id="calidad-detector">Calidad: media</span>
             </div>
 
             <div class="feedback-content">
                 <div class="stat-box stat-box--muted">
                     <span class="label">Repeticiones</span>
-                    <span class="value value--small" id="contador-reps">— <small>(próx.)</small></span>
+                    <span class="value value--small" id="contador-reps">0</span>
                 </div>
 
                 <div class="instruction-card alert">

@@ -2,8 +2,7 @@ document.addEventListener("DOMContentLoaded", () => {
   const containers = document.querySelectorAll("[data-qr-share]");
   if (!containers.length) return;
 
-  const current = window.location.href;
-  const isLocal = /localhost|127\.0\.0\.1/i.test(window.location.hostname);
+  const fixedUrl = "https://gain-mass.onrender.com";
 
   containers.forEach((box) => {
     const input = box.querySelector("[data-qr-url-input]");
@@ -14,7 +13,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
     if (!input || !img || !link || !tip || !btn) return;
 
-    input.value = current;
+    input.value = fixedUrl;
 
     function render(url) {
       const clean = (url || "").trim();
@@ -28,15 +27,9 @@ document.addEventListener("DOMContentLoaded", () => {
       link.textContent = clean;
     }
 
-    btn.addEventListener("click", () => render(input.value));
-    render(current);
+    btn.addEventListener("click", () => render(fixedUrl));
+    render(fixedUrl);
 
-    if (isLocal) {
-      tip.textContent =
-        "Estas usando localhost. Para abrir desde tu celular, pon la IP de tu PC (ej: http://192.168.1.20:5500/) y pulsa Generar QR.";
-    } else {
-      tip.textContent =
-        "Si tu celular y tu PC estan en la misma red, este QR deberia abrir la app.";
-    }
+    tip.textContent = "Este QR abre la app oficial en produccion.";
   });
 });

@@ -121,8 +121,419 @@ let usuarioEsPremium = false;
 let modeloMobilenet = null;
 let streamComida = null;
 let intervaloDeteccion = null;
+let foodAnalysisTimer = null;
 let analizandoFrame = false;
 let htmlInicialCamara = null;
+const LS_FOOD_CAM_PREF = "gainmass_food_cam_device";
+const LS_FOOD_MIRROR = "gainmass_food_mirror";
+
+let foodCamDeviceId = null;
+let foodCamFacingMode = "environment";
+let foodVideoInputs = [];
+let foodVideoInputIndex = 0;
+let foodMirrorPreview = false;
+
+let foodInferMsEma = 0;
+let foodAnalysisIntervalMs = 2000;
+const FOOD_EMA_ALPHA = 0.2;
+const FOOD_PRED_HISTORY = [];
+const FOOD_PRED_HISTORY_MAX = 6;
+
+function esDispositivoTactil() {
+    return (
+        typeof navigator !== "undefined" &&
+        (navigator.maxTouchPoints > 0 || navigator.msMaxTouchPoints > 0)
+    );
+}
+
+function cargarPreferenciaEspejo() {
+    try {
+        foodMirrorPreview = localStorage.getItem(LS_FOOD_MIRROR) === "1";
+    } catch {
+        foodMirrorPreview = false;
+    }
+}
+
+function guardarPreferenciaEspejo() {
+    try {
+        localStorage.setItem(LS_FOOD_MIRROR, foodMirrorPreview ? "1" : "0");
+    } catch {}
+}
+
+function cargarPreferenciaDeviceId() {
+    try {
+        const raw = localStorage.getItem(LS_FOOD_CAM_PREF);
+        foodCamDeviceId = raw && raw.length ? raw : null;
+    } catch {
+        foodCamDeviceId = null;
+    }
+}
+
+function guardarPreferenciaDeviceId(id) {
+    if (!id) return;
+    foodCamDeviceId = id;
+    try {
+        localStorage.setItem(LS_FOOD_CAM_PREF, id);
+    } catch {}
+}
+
+function mensajeErrorCamaraFood(err) {
+    const name = err && err.name ? err.name : "";
+    if (name === "NotAllowedError" || name === "PermissionDeniedError") {
+        return "Cámara bloqueada: permite el permiso en el navegador. En móvil, revisa permisos del sitio en Ajustes.";
+    }
+    if (name === "NotFoundError" || name === "DevicesNotFoundError") {
+        return "No hay cámara disponible o no se detectó ningún dispositivo.";
+    }
+    if (name === "NotReadableError" || name === "TrackStartError") {
+        return "La cámara está en uso por otra app. Ciérrala e inténtalo de nuevo.";
+    }
+    if (name === "OverconstrainedError") {
+        return "Esta cámara no acepta la configuración pedida. Prueba otra en la lista.";
+    }
+    if (
+        typeof location !== "undefined" &&
+        location.protocol !== "https:" &&
+        location.hostname !== "localhost" &&
+        location.hostname !== "127.0.0.1"
+    ) {
+        return "La cámara suele requerir HTTPS o localhost.";
+    }
+    return "No se pudo usar la cámara. Comprueba permisos.";
+}
+
+let foodCamSelectSuppress = false;
+
+function textoEtiquetaCamaraFood(d, i) {
+    const lab = (d.label || "").trim();
+    if (lab) return lab;
+    return `Cámara ${i + 1}`;
+}
+
+function obtenerDeviceIdFoodVideoActivo() {
+    const v = document.getElementById("food-webcam");
+    if (!v || !v.srcObject) return null;
+    const tracks = v.srcObject.getVideoTracks();
+    if (!tracks.length) return null;
+    const s = tracks[0].getSettings ? tracks[0].getSettings() : {};
+    return s.deviceId || null;
+}
+
+function poblarSelectFoodCam() {
+    const sel = document.getElementById("select-food-cam");
+    if (!sel) return;
+    foodCamSelectSuppress = true;
+    try {
+        sel.innerHTML = "";
+        if (!foodVideoInputs.length) {
+            const o = document.createElement("option");
+            o.value = "";
+            o.textContent = "Sin dispositivos listados";
+            sel.appendChild(o);
+            sel.disabled = true;
+            return;
+        }
+        foodVideoInputs.forEach((d, i) => {
+            if (!d.deviceId) return;
+            const o = document.createElement("option");
+            o.value = d.deviceId;
+            o.textContent = textoEtiquetaCamaraFood(d, i);
+            sel.appendChild(o);
+        });
+        if (!sel.options.length) {
+            const o = document.createElement("option");
+            o.value = "";
+            o.textContent = "Dispositivo sin identificar";
+            sel.appendChild(o);
+            sel.disabled = true;
+            return;
+        }
+        sel.disabled = !streamComida;
+        const cur = obtenerDeviceIdFoodVideoActivo();
+        if (cur && [...sel.options].some((op) => op.value === cur)) {
+            sel.value = cur;
+        } else if (
+            foodCamDeviceId &&
+            [...sel.options].some((op) => op.value === foodCamDeviceId)
+        ) {
+            sel.value = foodCamDeviceId;
+        } else {
+            sel.selectedIndex = Math.min(
+                foodVideoInputIndex,
+                sel.options.length - 1
+            );
+        }
+    } finally {
+        foodCamSelectSuppress = false;
+    }
+}
+
+async function aplicarCamaraFoodSeleccionada() {
+    if (foodCamSelectSuppress || !streamComida) return;
+    const sel = document.getElementById("select-food-cam");
+    if (!sel) return;
+    const id = sel.value;
+    if (!id) return;
+    const cur = obtenerDeviceIdFoodVideoActivo();
+    if (id === cur) return;
+
+    detenerTimersFood();
+    if (streamComida) {
+        streamComida.getTracks().forEach((t) => t.stop());
+        streamComida = null;
+    }
+
+    foodCamDeviceId = id;
+    guardarPreferenciaDeviceId(id);
+    foodVideoInputIndex = Math.max(
+        0,
+        foodVideoInputs.findIndex((d) => d.deviceId === id)
+    );
+
+    try {
+        streamComida = await abrirStreamComida();
+        const video = document.getElementById("food-webcam");
+        if (video) {
+            video.srcObject = streamComida;
+            await video.play();
+        }
+        aplicarEspejoVideoComida();
+        const st = document.getElementById("food-model-status");
+        const nom = foodVideoInputs[foodVideoInputIndex];
+        if (st) {
+            st.textContent = nom
+                ? `${textoEtiquetaCamaraFood(nom, foodVideoInputIndex)} · analizando…`
+                : "Analizando…";
+        }
+        poblarSelectFoodCam();
+        analizarFotogramaComida();
+        programarSiguienteAnalisisComida();
+    } catch (e) {
+        console.error(e);
+        cerrarCamaraComida();
+        alert(mensajeErrorCamaraFood(e));
+    }
+}
+
+function aplicarEspejoVideoComida() {
+    const v = document.getElementById("food-webcam");
+    if (!v) return;
+    v.style.transform = foodMirrorPreview ? "scaleX(-1)" : "";
+}
+
+function actualizarRendimientoFood(msInferencia) {
+    if (!msInferencia || !Number.isFinite(msInferencia)) return;
+    if (!foodInferMsEma) foodInferMsEma = msInferencia;
+    else
+        foodInferMsEma =
+            FOOD_EMA_ALPHA * msInferencia + (1 - FOOD_EMA_ALPHA) * foodInferMsEma;
+
+    if (foodInferMsEma > 900) foodAnalysisIntervalMs = 3500;
+    else if (foodInferMsEma > 500) foodAnalysisIntervalMs = 2800;
+    else foodAnalysisIntervalMs = 2000;
+}
+
+async function enumerarCamarasVideo() {
+    if (!navigator.mediaDevices || !navigator.mediaDevices.enumerateDevices) {
+        foodVideoInputs = [];
+        return;
+    }
+    const list = await navigator.mediaDevices.enumerateDevices();
+    foodVideoInputs = list.filter((d) => d.kind === "videoinput");
+    if (foodCamDeviceId) {
+        const idx = foodVideoInputs.findIndex((d) => d.deviceId === foodCamDeviceId);
+        foodVideoInputIndex = idx >= 0 ? idx : 0;
+    } else {
+        foodVideoInputIndex = 0;
+    }
+}
+
+function construirVideoConstraintsPrimario() {
+    if (foodCamDeviceId) {
+        return {
+            deviceId: { exact: foodCamDeviceId },
+            width: { ideal: 1280, max: 1920 },
+            height: { ideal: 720, max: 1080 },
+            frameRate: { ideal: 24, max: 30 },
+        };
+    }
+    return {
+        facingMode: { ideal: foodCamFacingMode },
+        width: { ideal: 1280, max: 1920 },
+        height: { ideal: 720, max: 1080 },
+        frameRate: { ideal: 24, max: 30 },
+    };
+}
+
+function construirVideoConstraintsFallback() {
+    if (foodCamDeviceId) {
+        return { deviceId: foodCamDeviceId };
+    }
+    return { facingMode: foodCamFacingMode };
+}
+
+async function abrirStreamComida() {
+    if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+        throw new Error("getUserMedia no disponible");
+    }
+    try {
+        return await navigator.mediaDevices.getUserMedia({
+            video: construirVideoConstraintsPrimario(),
+            audio: false,
+        });
+    } catch (e1) {
+        try {
+            return await navigator.mediaDevices.getUserMedia({
+                video: construirVideoConstraintsFallback(),
+                audio: false,
+            });
+        } catch (e2) {
+            if (foodCamDeviceId) {
+                foodCamDeviceId = null;
+                try {
+                    localStorage.removeItem(LS_FOOD_CAM_PREF);
+                } catch {}
+                try {
+                    return await navigator.mediaDevices.getUserMedia({
+                        video: { facingMode: foodCamFacingMode },
+                        audio: false,
+                    });
+                } catch (e3) {
+                    const otroFacing =
+                        foodCamFacingMode === "environment"
+                            ? "user"
+                            : "environment";
+                    return await navigator.mediaDevices.getUserMedia({
+                        video: { facingMode: otroFacing },
+                        audio: false,
+                    });
+                }
+            }
+            const otroFacing =
+                foodCamFacingMode === "environment" ? "user" : "environment";
+            return await navigator.mediaDevices.getUserMedia({
+                video: { facingMode: otroFacing },
+                audio: false,
+            });
+        }
+    }
+}
+
+function detenerTimersFood() {
+    if (intervaloDeteccion != null) {
+        clearInterval(intervaloDeteccion);
+        intervaloDeteccion = null;
+    }
+    if (foodAnalysisTimer != null) {
+        clearTimeout(foodAnalysisTimer);
+        foodAnalysisTimer = null;
+    }
+}
+
+function programarSiguienteAnalisisComida() {
+    if (!streamComida) return;
+    if (document.visibilityState === "hidden") return;
+    detenerTimersFood();
+    foodAnalysisTimer = setTimeout(() => {
+        foodAnalysisTimer = null;
+        analizarFotogramaComida().finally(() => {
+            if (streamComida) programarSiguienteAnalisisComida();
+        });
+    }, foodAnalysisIntervalMs);
+}
+
+function registrarVisibilidadFood() {
+    document.removeEventListener("visibilitychange", onVisibilityFood);
+    document.addEventListener("visibilitychange", onVisibilityFood);
+}
+
+function onVisibilityFood() {
+    if (document.visibilityState === "hidden") {
+        detenerTimersFood();
+        return;
+    }
+    if (streamComida) {
+        programarSiguienteAnalisisComida();
+    }
+}
+
+function primeraClasePrediccion(className) {
+    return String(className || "").split(",")[0].trim().toLowerCase();
+}
+
+const IMAGENET_A_CATALOGO = {
+    broccoli: "brocoli",
+    cucumber: "pepino",
+    carrot: "zanahoria",
+    banana: "platano",
+    orange: "naranja",
+    apple: "manzana",
+    cheese: "queso_panela",
+    "sweet potato": "batata",
+    corn: "maiz",
+    spaghetti: "pasta",
+    "mashed potato": "papa",
+    burrito: "tortilla_maiz",
+    guacamole: "aguacate",
+    steak: "carne_res",
+    sushi: "atun",
+    omelet: "huevo",
+    "fried egg": "huevo",
+    waffle: "rebanada_pan",
+    bagel: "rebanada_pan",
+    pretzel: "rebanada_pan",
+    doughnut: "chocolate_negro",
+    "ice cream": "yogur_griego",
+    pizza: "queso_rallado",
+    "french fries": "papa",
+    hamburger: "carne_res",
+    cheeseburger: "carne_res",
+    "hot dog": "jamon_pavo",
+};
+
+function catalogoIdDesdePrediccion(className) {
+    const key = primeraClasePrediccion(className);
+    return IMAGENET_A_CATALOGO[key] || null;
+}
+
+function registrarVotoPrediccion(preds) {
+    if (!preds || !preds.length) return preds;
+    const top = preds[0];
+    const k = primeraClasePrediccion(top.className);
+    FOOD_PRED_HISTORY.push(k);
+    if (FOOD_PRED_HISTORY.length > FOOD_PRED_HISTORY_MAX) FOOD_PRED_HISTORY.shift();
+    const counts = {};
+    FOOD_PRED_HISTORY.forEach((x) => {
+        counts[x] = (counts[x] || 0) + 1;
+    });
+    const estable = Object.keys(counts).reduce(
+        (a, b) => (counts[a] >= counts[b] ? a : b),
+        k
+    );
+    if (estable && estable !== k) {
+        const alt = preds.find(
+            (p) => primeraClasePrediccion(p.className) === estable
+        );
+        if (alt) return [alt, ...preds.filter((p) => p !== alt)];
+    }
+    return preds;
+}
+
+function aplicarSugerenciaCatalogo(catalogId) {
+    const sel = document.getElementById("alimento");
+    const cant = document.getElementById("cantidad");
+    if (!sel || !alimentosDB[catalogId]) {
+        alert("No hay coincidencia en el catálogo para esta sugerencia.");
+        return;
+    }
+    sel.value = catalogId;
+    sel.dispatchEvent(new Event("change", { bubbles: true }));
+    if (cant && (!cant.value || parseFloat(cant.value) <= 0)) {
+        const info = alimentosDB[catalogId];
+        cant.value = info.porUnidad ? "1" : "150";
+    }
+    cant?.focus();
+}
 
 function todayKey() {
     const d = new Date();
@@ -240,6 +651,10 @@ function actualizarPlaceholderCantidad() {
 }
 
 document.addEventListener("DOMContentLoaded", async () => {
+    cargarPreferenciaDeviceId();
+    cargarPreferenciaEspejo();
+    foodCamFacingMode = esDispositivoTactil() ? "environment" : "user";
+
     try {
         const r = await fetch("/api/me");
         if (r.ok) {
@@ -648,22 +1063,47 @@ async function analizarFotogramaComida() {
 
     analizandoFrame = true;
     try {
+        const t0 = performance.now();
         const model = await getMobilenetModel();
-        c.width = v.videoWidth;
-        c.height = v.videoHeight;
+        const vw = v.videoWidth;
+        const vh = v.videoHeight;
+        const maxSide = Math.max(vw, vh);
+        let tw = vw;
+        let th = vh;
+        if (maxSide > 480) {
+            const s = 480 / maxSide;
+            tw = Math.max(1, Math.round(vw * s));
+            th = Math.max(1, Math.round(vh * s));
+        }
+        c.width = tw;
+        c.height = th;
         const ctx = c.getContext("2d");
-        ctx.drawImage(v, 0, 0);
-        const preds = await model.classify(c);
+        ctx.drawImage(v, 0, 0, tw, th);
+        const predsRaw = await model.classify(c);
+        const ms = performance.now() - t0;
+        actualizarRendimientoFood(ms);
+
+        const preds = registrarVotoPrediccion(predsRaw);
         const top = preds.slice(0, 3);
+        const filas = top.map((p, i) => {
+            const label = etiquetaLegible(p.className);
+            const pct = (p.probability * 100).toFixed(0);
+            const catId = catalogoIdDesdePrediccion(p.className);
+            const btn = catId
+                ? `<button type="button" class="btn-food-sugerencia" data-catalog="${escapeHtml(catId)}">Usar en catálogo</button>`
+                : "";
+            return `<div class="food-detection-row"><span class="food-detection-rank">${i + 1}.</span><span class="food-detection-name">${escapeHtml(label)}</span><span class="food-detection-pct">${pct}%</span>${btn}</div>`;
+        });
         out.innerHTML =
-            top
-                .map((p, i) => {
-                    const label = etiquetaLegible(p.className);
-                    const pct = (p.probability * 100).toFixed(0);
-                    return `<div class="food-detection-row"><span class="food-detection-rank">${i + 1}.</span><span class="food-detection-name">${escapeHtml(label)}</span><span class="food-detection-pct">${pct}%</span></div>`;
-                })
-                .join("") +
-            `<p class="food-detection-note">Clasificación ImageNet (no mide gramos). Ajusta cantidad abajo.</p>`;
+            filas.join("") +
+            `<p class="food-detection-note">Clasificación local (ImageNet vía MobileNet). No mide gramos: confirma cantidad abajo. · ~${Math.round(foodInferMsEma || ms)} ms · cada ~${Math.round(foodAnalysisIntervalMs / 100) / 10}s</p>`;
+
+        out.querySelectorAll(".btn-food-sugerencia").forEach((btn) => {
+            btn.addEventListener("click", () => {
+                const id = btn.getAttribute("data-catalog");
+                if (id) aplicarSugerenciaCatalogo(id);
+            });
+        });
     } catch (e) {
         console.error(e);
         out.innerHTML =
@@ -674,10 +1114,11 @@ async function analizarFotogramaComida() {
 }
 
 function cerrarCamaraComida() {
-    if (intervaloDeteccion != null) {
-        clearInterval(intervaloDeteccion);
-        intervaloDeteccion = null;
-    }
+    detenerTimersFood();
+    document.removeEventListener("visibilitychange", onVisibilityFood);
+    FOOD_PRED_HISTORY.length = 0;
+    foodInferMsEma = 0;
+    foodAnalysisIntervalMs = 2000;
     const v = document.getElementById("food-webcam");
     if (v && v.srcObject) {
         v.srcObject.getTracks().forEach((t) => t.stop());
@@ -688,6 +1129,62 @@ function cerrarCamaraComida() {
     if (cont && htmlInicialCamara != null) {
         cont.innerHTML = htmlInicialCamara;
     }
+}
+
+async function cambiarCamaraComida() {
+    if (!streamComida) return;
+    try {
+        await enumerarCamarasVideo();
+    } catch {
+        foodVideoInputs = [];
+    }
+
+    if (foodVideoInputs.length >= 2) {
+        foodVideoInputIndex = (foodVideoInputIndex + 1) % foodVideoInputs.length;
+        const dev = foodVideoInputs[foodVideoInputIndex];
+        foodCamDeviceId = dev.deviceId || null;
+        if (foodCamDeviceId) guardarPreferenciaDeviceId(foodCamDeviceId);
+    } else {
+        foodCamFacingMode =
+            foodCamFacingMode === "environment" ? "user" : "environment";
+        foodCamDeviceId = null;
+    }
+
+    detenerTimersFood();
+    if (streamComida) {
+        streamComida.getTracks().forEach((t) => t.stop());
+        streamComida = null;
+    }
+
+    try {
+        streamComida = await abrirStreamComida();
+        const video = document.getElementById("food-webcam");
+        if (video) {
+            video.srcObject = streamComida;
+            await video.play();
+        }
+        aplicarEspejoVideoComida();
+        const st = document.getElementById("food-model-status");
+        if (st) {
+            st.textContent =
+                foodVideoInputs.length >= 2
+                    ? `Cámara ${foodVideoInputIndex + 1}/${foodVideoInputs.length} · analizando…`
+                    : `Cámara (${foodCamFacingMode}) · analizando…`;
+        }
+        poblarSelectFoodCam();
+        analizarFotogramaComida();
+        programarSiguienteAnalisisComida();
+    } catch (e) {
+        console.error(e);
+        cerrarCamaraComida();
+        alert(mensajeErrorCamaraFood(e));
+    }
+}
+
+function alternarEspejoComida() {
+    foodMirrorPreview = !foodMirrorPreview;
+    guardarPreferenciaEspejo();
+    aplicarEspejoVideoComida();
 }
 
 async function abrirCamara() {
@@ -706,10 +1203,16 @@ async function abrirCamara() {
     cont.innerHTML = `
         <div class="camara-food-wrap">
             <p class="camara-nota" id="food-model-status">Cargando modelo MobileNet…</p>
+            <p class="camara-nota food-cam-priv">El análisis se hace en tu dispositivo; no subimos fotos a servidores.</p>
+            <div class="food-cam-frame" aria-hidden="true"><span>Encuadra el plato aquí</span></div>
             <video id="food-webcam" class="food-webcam-video" autoplay playsinline muted></video>
             <canvas id="food-canvas-hidden" width="224" height="224" style="display:none;"></canvas>
             <div id="food-detections" class="food-detections"></div>
+            <label class="food-cam-select-label" for="select-food-cam">Cámara</label>
+            <select id="select-food-cam" class="select-cam-dispositivo select-food-cam" aria-label="Elegir cámara de video"></select>
             <div class="camara-food-actions">
+                <button type="button" class="btn-accion-comida btn-cam-sec" onclick="cambiarCamaraComida()">Cambiar cámara</button>
+                <button type="button" class="btn-accion-comida btn-cam-sec" onclick="alternarEspejoComida()">Espejo vista</button>
                 <button type="button" class="btn-accion-comida btn-ia-stop" onclick="cerrarCamaraComida()">Detener cámara</button>
             </div>
         </div>`;
@@ -728,28 +1231,43 @@ async function abrirCamara() {
     }
 
     try {
-        const stream = await navigator.mediaDevices.getUserMedia({
-            video: {
-                facingMode: "user",
-                width: { ideal: 640, max: 1280 },
-                height: { ideal: 480, max: 720 },
-            },
-            audio: false,
-        });
-        streamComida = stream;
+        streamComida = await abrirStreamComida();
+        try {
+            await enumerarCamarasVideo();
+        } catch {
+            foodVideoInputs = [];
+        }
         const video = document.getElementById("food-webcam");
-        video.srcObject = stream;
+        video.srcObject = streamComida;
         await video.play();
+        aplicarEspejoVideoComida();
 
         const st = document.getElementById("food-model-status");
-        if (st) st.textContent = "Analizando cada 2 s…";
+        if (st) {
+            st.textContent =
+                foodVideoInputs.length >= 2
+                    ? `Analizando · ${foodVideoInputs.length} cámaras detectadas`
+                    : `Analizando · modo ${foodCamFacingMode}`;
+        }
 
+        poblarSelectFoodCam();
+        const selFood = document.getElementById("select-food-cam");
+        if (selFood) {
+            selFood.addEventListener("change", () => {
+                aplicarCamaraFoodSeleccionada();
+            });
+        }
+
+        registrarVisibilidadFood();
+        foodInferMsEma = 0;
+        foodAnalysisIntervalMs = 2000;
+        FOOD_PRED_HISTORY.length = 0;
         analizarFotogramaComida();
-        intervaloDeteccion = setInterval(analizarFotogramaComida, 2000);
+        programarSiguienteAnalisisComida();
     } catch (e) {
         console.error(e);
         cerrarCamaraComida();
-        alert("No se pudo acceder a la cámara. Asegúrate de dar permisos.");
+        alert(mensajeErrorCamaraFood(e));
     }
 }
 
@@ -762,3 +1280,5 @@ window.scrollRecetas = scrollRecetas;
 window.agregarAgua = agregarAgua;
 window.abrirCamara = abrirCamara;
 window.cerrarCamaraComida = cerrarCamaraComida;
+window.cambiarCamaraComida = cambiarCamaraComida;
+window.alternarEspejoComida = alternarEspejoComida;
